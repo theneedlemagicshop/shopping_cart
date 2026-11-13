@@ -12,17 +12,17 @@ const products = [
         {
             id: 82.1,
             name: "Crochet Mini Dress Keychain - Light Pink",
-            image: "images/image82_1.PNG"
+            image: "images/image82_1.png"
         },
         {
             id: 82.2,
             name: "Crochet Mini Dress Keychain - Yellow",
-            image: "images/image82_2.PNG"
+            image: "images/image82_2.png"
         },
         {
             id: 82.3,
             name: "Crochet Mini Dress Keychain - Orange",
-            image: "images/image82_3.PNG"
+            image: "images/image82_3.png"
         }
     ]
 },
