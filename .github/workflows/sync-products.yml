@@ -1,0 +1,104 @@
+name: Sync store products to Supabase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - script.js
+      - .github/workflows/sync-products.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check and sync product prices
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import html, json, os, re, urllib.request, urllib.error
+          from decimal import Decimal
+          from pathlib import Path
+
+          source = Path('script.js').read_text(encoding='utf-8')
+          array = re.search(r'\bconst\s+products\s*=\s*\[(.*?)\]\s*;', source, re.S)
+          if not array:
+              raise SystemExit('Could not find const products = [...] in script.js')
+
+          blocks = list(re.finditer(r'\{\s*id\s*:\s*(\d+)\s*,(.*?)\}', array.group(1), re.S))
+          if not blocks:
+              raise SystemExit('No product entries found; nothing synced')
+
+          items = []
+          seen = set()
+          for block in blocks:
+              product_id = int(block.group(1))
+              body = block.group(2)
+              name = re.search(r'\bname\s*:\s*"((?:\\.|[^"\\])*)"', body)
+              price = re.search(r'\bprice\s*:\s*(\d+(?:\.\d+)?)\b', body)
+              image = re.search(r'\bimage\s*:\s*"((?:\\.|[^"\\])*)"', body)
+              if not all((name, price, image)):
+                  raise SystemExit(f'Missing name, numeric price, or image in product {product_id}')
+              if product_id in seen:
+                  raise SystemExit(f'Duplicate product ID: {product_id}')
+              seen.add(product_id)
+
+              clean_name = name.group(1).replace('\\<', '<')
+              clean_name = html.unescape(re.sub(r'<br\s*/?>', ' ', clean_name, flags=re.I))
+              clean_name = re.sub(r'\s+', ' ', clean_name).strip()
+              image_path = image.group(1)
+              paise = int(Decimal(price.group(1)) * 100)
+              if not clean_name or paise <= 0 or not re.fullmatch(r'images/[\w.\-/]+', image_path):
+                  raise SystemExit(f'Invalid product details for ID {product_id}')
+              items.append(dict(id=product_id, name=clean_name,
+                                price_paise=paise, image_path=image_path, active=True))
+
+          project = os.environ['SUPABASE_URL'].rstrip('/')
+          secret = os.environ['SUPABASE_SECRET_KEY']
+          if not re.fullmatch(r'https://[a-z0-9-]+\.supabase\.co', project):
+              raise SystemExit('Invalid SUPABASE_URL GitHub secret')
+          if not secret.startswith('sb_secret_'):
+              raise SystemExit('SUPABASE_SECRET_KEY must begin with sb_secret_')
+
+          def api(method, path, data=None, prefer=None):
+              headers = {'apikey': secret, 'Content-Type': 'application/json'}
+              if prefer:
+                  headers['Prefer'] = prefer
+              payload = None if data is None else json.dumps(data).encode('utf-8')
+              request = urllib.request.Request(project + '/rest/v1/' + path,
+                                               headers=headers, data=payload, method=method)
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return response.read()
+              except urllib.error.HTTPError as error:
+                  raise SystemExit(f'Supabase {method} failed ({error.code}): '
+                                   + error.read().decode('utf-8', errors='replace'))
+
+          # Upload current products first; never delete historical orders.
+          api('POST', 'tnm_products?on_conflict=id', items,
+              'resolution=merge-duplicates,return=minimal')
+
+          # Disable removed products rather than deleting rows referenced by orders.
+          existing_ids = set()
+          offset = 0
+          while True:
+              page = json.loads(api('GET', f'tnm_products?select=id&limit=1000&offset={offset}'))
+              existing_ids.update(row['id'] for row in page)
+              if len(page) < 1000:
+                  break
+              offset += 1000
+          removed_ids = sorted(existing_ids - seen)
+          if removed_ids:
+              id_filter = ','.join(str(i) for i in removed_ids)
+              api('PATCH', f'tnm_products?id=in.({id_filter})', {'active': False})
+
+          print(f'Synced {len(items)} products; marked {len(removed_ids)} removed products inactive.')
+          PY

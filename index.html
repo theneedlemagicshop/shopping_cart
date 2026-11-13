@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<div id="youtube-modal">
+
+    <div class="youtube-modal-box">
+
+        <button class="youtube-close" onclick="closeYouTubeModal()">
+            ✕
+        </button>
+
+        <h2>Watch Product Video</h2>
+
+        <p>Choose a video</p>
+
+        <div id="youtube-video-list"></div>
+
+    </div>
+
+</div>
+
+<div id="image-modal" onclick="closeImageModal()">
+
+    <button id="image-close" onclick="event.stopPropagation(); closeImageModal()">
+        ✕
+    </button>
+
+    <img id="expanded-image" onclick="event.stopPropagation()">
+
+</div>
+
+
+<!-- PREMIUM WEBSITE FOOTER -->
+<footer class="tnm-footer">
+
+    <div class="tnm-footer-inner">
+
+        <div class="tnm-footer-brand">
+            <h2>The Needle Magic Shop</h2>
+            <p>
+                Beautifully handcrafted crochet creations,
+                made with love and attention to detail.
+            </p>
+        </div>
+
+        <div class="tnm-footer-links">
+            <h3>Explore</h3>
+            <a href="#products">Shop Collection</a>
+            <a href="#search">Search Products</a>
+        </div>
+
+        <div class="tnm-footer-contact">
+            <h3>Need Help?</h3>
+            <p>
+                Have a question about a product,
+                shipping, or an order?
+            </p>
+
+            <a href="https://wa.me/918588827327"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="tnm-contact-link">
+                Chat on WhatsApp ↗
+            </a>
+        </div>
+
+    </div>
+
+    <div class="tnm-footer-bottom">
+        <span>© The Needle Magic Shop</span>
+        <span>Handmade with ♥</span>
+    </div>
+
+</footer>
+
+
+<body>
+
+    
+<!-- PREMIUM STICKY NAVIGATION -->
+<nav id="tnm-sticky-nav"
+     aria-label="Quick shop navigation">
+
+    <div class="tnm-sticky-inner">
+
+        <a href="#" class="tnm-nav-brand">
+            The Needle Magic <span>Shop</span>
+        </a>
+
+        <div class="tnm-nav-actions">
+
+            <button type="button"
+                    id="tnm-nav-search"
+                    aria-label="Go to search">
+                <span aria-hidden="true">⌕</span>
+                <span class="tnm-nav-label">Search</span>
+            </button>
+
+            <button type="button"
+                    id="tnm-nav-favorites"
+                    aria-label="Show favorites">
+                <span aria-hidden="true">☆</span>
+                <span class="tnm-nav-label">Favorites</span>
+            </button>
+
+        </div>
+
+    </div>
+</nav>
+
+
+<header class="store-header">
+
+    <h1>The Needle Magic Shop</h1>
+
+<p>
+    Handmade Crochet Creations
+</p>
+
+<input
+    type="text"
+    id="search"
+    placeholder="🔍 Search products..."
+    onkeyup="searchProducts()">
+</header>
+
+<div class="top-controls">
+
+    <select id="sort" onchange="sortProducts()">
+
+        <option value="default">Sort By Latest</option>
+
+        <option value="low">Sort By Price Low to High</option>
+
+        <option value="high">Sort By Price High to Low</option>
+
+    </select>
+
+    <button id="filter-btn" onclick="toggleFilters()">
+        Filters
+    </button>
+
+    <button id="favorites-btn" onclick="toggleFavorites()">
+        ☆ Favorites
+    </button>
+
+</div>
+
+<div id="filters-panel" style="display:none;">
+
+    <h3>Price Range</h3>
+
+<div id="price-filter">
+
+    <input
+        type="range"
+        id="price-slider"
+        oninput="updatePriceFilter()">
+
+    <div class="price-inputs">
+
+        ₹
+        <input
+            type="number"
+            id="min-price"
+            oninput="updatePriceInputs()">
+
+        <span>to</span>
+
+        ₹
+        <input
+            type="number"
+            id="max-price"
+            oninput="updatePriceInputs()">
+
+    </div>
+
+</div>
+
+    <hr>
+
+    <h3>Categories</h3>
+
+    <div id="category-buttons"></div>
+
+</div>
+
+
+<!-- PREMIUM COLLECTION INTRO -->
+<section class="collection-intro">
+
+    <div class="collection-hero">
+        <span class="collection-kicker">
+            THE NEEDLE MAGIC SHOP · HANDMADE COLLECTION
+        </span>
+
+        <h2>Made with love, styled for you.</h2>
+
+        <p>
+            Discover thoughtfully handcrafted crochet
+            creations for gifting, decorating,
+            and everyday joy.
+        </p>
+
+        <div class="collection-benefits">
+            <span>♡ Handmade</span>
+            <span>✦ Made with Care</span>
+            <span>◉ Easy Ordering</span>
+        </div>
+    </div>
+
+    <div class="collection-heading">
+        <h2>Explore Our Collection</h2>
+        <span>Handcrafted Favorites</span>
+    </div>
+
+</section>
+
+
+<div id="products"></div>
+
+<div id="cart">
+    <h2>Shopping Cart</h2>
+
+    <ul id="cart-items"></ul>
+
+    <div class="order-summary">
+    <div class="summary-row">
+        <span>Subtotal</span>
+        <span>₹<span id="subtotal">0</span></span>
+    </div>
+
+    
+<div class="summary-row">
+    <span>Shipping</span>
+    <span style="color:green;">FREE</span>
+</div>
+
+    <hr>
+
+    <div class="summary-row total-row">
+        <span>Total</span>
+        <span>₹<span id="total">0</span></span>
+    </div>
+</div>
+
+<button id="checkout-btn" onclick="checkout()">
+    Proceed to Checkout
+</button>
+
+<div id="checkout-modal" style="display:none;">
+    <div id="checkout-form">
+
+    <button id="cancel-checkout" onclick="cancelCheckout()">
+        ← Cancel Checkout
+    </button>
+
+    <h2>Checkout</h2>
+
+    
+<label for="name">Full Name</label>
+<input type="text" id="name">
+
+<label for="phone">Mobile Number</label>
+<div class="phone-input">
+    <span>+91</span>
+    <input
+        type="tel"
+        id="phone"
+        maxlength="10"
+        inputmode="numeric"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+</div>
+
+<label for="tnm-email">Email Address</label>
+<input
+    type="email"
+    id="tnm-email"
+    placeholder="example@gmail.com">
+
+<label for="pincode">PIN Code</label>
+<input
+    type="text"
+    id="pincode"
+    maxlength="6"
+    inputmode="numeric"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+
+<label for="city">City</label>
+<input type="text" id="city">
+
+<label for="tnm-state">State</label>
+<input
+    type="text"
+    id="tnm-state"
+    placeholder="Your state">
+
+<label for="address">Full Delivery Address</label>
+<input
+    type="text"
+    id="address"
+    placeholder="House number, street, area, landmark">
+
+
+<h3>Choose Payment Method</h3>
+
+<label class="tnm-payment-option">
+    <input type="radio" name="tnm-payment"
+           value="online" checked>
+    <span>💳 Online Payment — No Extra Fee</span>
+</label>
+
+<label class="tnm-payment-option">
+    <input type="radio" name="tnm-payment"
+           value="cod">
+    <span>💵 Cash on Delivery — +₹29</span>
+</label>
+
+<h3>Order Breakdown</h3>
+<div id="tnm-checkout-breakdown"></div>
+
+
+<p id="tnm-payment-notice" class="tnm-payment-notice">
+    Online payments are not connected yet.
+    Orders will temporarily be sent through WhatsApp.
+</p>
+
+
+<!-- Secure checkout verification -->
+<div id="tnm-turnstile"
+     style="margin: 18px 0;">
+</div>
+
+<button id="place-order-btn" onclick="placeOrder()">
+    Continue on WhatsApp (Temporary)
+</button>
+
+</div>
+
+</div>
+
+<!-- Product Quick View -->
+
+<div id="quick-view-modal">
+
+    <div class="quick-view-box">
+
+        <button class="quick-view-close" onclick="closeQuickView()">
+            ✕
+        </button>
+
+        <img id="quick-view-image" src="" alt="">
+
+        <div class="quick-view-details">
+
+            <h2 id="quick-view-name"></h2>
+
+            <div class="quick-view-price">
+                ₹<span id="quick-view-price"></span>
+            </div>
+
+            <p class="stock">✅ In Stock</p>
+
+            <p class="shipping">🚚 Free Shipping</p>
+
+            <div class="quick-view-buttons">
+
+    <button id="quick-view-buy" class="buy-now">
+        ⚡ Buy Now
+    </button>
+
+<div id="quick-view-cart" class="quick-view-cart-control">
+    <button type="button" onclick="quickViewAddToCart()">
+        🛒 Add to Cart
+    </button>
+</div>
+
+    <button id="quick-view-video" class="youtube-btn">
+        ▶ Video Tutorial
+    </button>
+
+    <button id="quick-view-favorite" class="quick-view-favorite">
+        ☆ Add to Favorites
+    </button>
+
+</div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="floating-cart" onclick="openCartDrawer()">
+    🛒
+    <span id="cart-count">0</span>
+</div>
+
+<div id="cart-overlay" onclick="closeCartDrawer()"></div>
+
+<div id="cart-drawer">
+
+    <div class="cart-drawer-header">
+        <h2>🛒 Your Cart</h2>
+
+        <button class="cart-drawer-close" onclick="closeCartDrawer()">
+            ✕
+        </button>
+    </div>
+
+    <div id="tnm-rewards">
+    <strong id="tnm-reward-message">
+        Add products to unlock rewards!
+    </strong>
+
+    <div class="tnm-reward-track">
+        <div id="tnm-reward-progress"></div>
+    </div>
+
+    <div class="tnm-reward-milestones">
+        <span class="unlocked">🚚 Free Shipping</span>
+        <span id="tnm-gift-milestone">🎁 ₹299 Gift</span>
+        <span id="tnm-discount-milestone">🏷️ ₹499 10% OFF</span>
+    </div>
+</div>
+
+<div id="cart-drawer-items"></div>
+
+    <div class="cart-drawer-footer">
+
+        <div class="tnm-drawer-summary">
+    <div>
+        <span>Subtotal</span>
+        <strong id="tnm-drawer-subtotal">₹0.00</strong>
+    </div>
+
+    <div>
+        <span>10% Discount</span>
+        <strong id="tnm-drawer-discount">₹0.00</strong>
+    </div>
+
+    <div>
+        <span>Shipping</span>
+        <strong class="tnm-free">FREE</strong>
+    </div>
+
+    <div>
+        <span>Surprise Free Gift</span>
+        <strong id="tnm-drawer-gift">Locked</strong>
+    </div>
+</div>
+
+<div class="cart-drawer-total">
+    <span>Total</span>
+    <strong>₹<span id="drawer-total">0</span></strong>
+</div>
+
+        <button class="drawer-checkout-btn" onclick="closeCartDrawer(); checkout();">
+            Checkout
+        </button>
+
+    </div>
+
+</div>
+
+<div id="toast">
+    ✅ Added to Cart!
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<script
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+    defer>
+</script>
+
+<script src="script.js"></script>
+
+<!-- BACK TO TOP BUTTON -->
+
+<button id="scrollTopBtn"
+        type="button"
+        aria-label="Back to top"
+        onclick="smoothScrollToTop()">
+    ↑
+</button>
+
+
+<script>
+(function () {
+    const btn = document.getElementById("scrollTopBtn");
+
+    function updateScrollButton() {
+        if (window.scrollY > 400) {
+            btn.style.setProperty("display", "flex", "important");
+        } else {
+            btn.style.setProperty("display", "none", "important");
+        }
+    }
+
+    window.addEventListener("scroll", updateScrollButton, {
+        passive: true
+    });
+
+    updateScrollButton();
+})();
+</script>
+
+
+</body>
+</html>
+
